@@ -1,0 +1,6 @@
+{
+  "extends": "@clickhouse-sql-editor/config/tsconfig.base.json",
+  "compilerOptions": {
+    "strictNullChecks": true
+  }
+}
