@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@clickhouse-sql-editor/env": "workspace:*",
+    "@clickhouse/client": "^1.18.2",
+    "body-parser": "^2.2.2",
     "cors": "^2.8.5",
     "dotenv": "catalog:",
     "express": "^5.1.0",
