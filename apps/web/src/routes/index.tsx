@@ -1,15 +1,5 @@
-import { ClientOnly, createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
-
-const routeFallback = <div className="h-full" />;
-
-const Editor = lazy(async () => {
-  const { Editor } = await import("@/components/editor");
-
-  return {
-    default: Editor,
-  };
-});
+import { createFileRoute } from "@tanstack/react-router";
+import { Editor } from "@/components/editor";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -17,10 +7,8 @@ export const Route = createFileRoute("/")({
 
 function HomeComponent() {
   return (
-    <ClientOnly fallback={routeFallback}>
-      <Suspense fallback={routeFallback}>
-        <Editor />
-      </Suspense>
-    </ClientOnly>
+    <div className="h-full min-h-0 min-w-0">
+      <Editor />
+    </div>
   );
 }

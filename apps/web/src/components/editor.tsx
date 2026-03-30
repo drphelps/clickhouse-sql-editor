@@ -1,23 +1,18 @@
+import type {
+  TableColumnConfigProps,
+  TableRowType,
+} from "@clickhouse/click-ui";
+import {
+  Button,
+  DangerAlert,
+  Icon,
+  Panel,
+  Table,
+  Text,
+  Title,
+} from "@clickhouse/click-ui";
 import { env } from "@clickhouse-sql-editor/env/web";
 import { SqlMonacoEditor } from "@sqlrooms/sql-editor";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  ScrollArea,
-  Spinner,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@sqlrooms/ui";
 import { useCallback, useMemo, useState } from "react";
 
 type QueryStatus = "idle" | "loading" | "success" | "error";
@@ -35,6 +30,11 @@ function formatCell(value: unknown): string {
   }
   return String(value);
 }
+
+/** Readable column floor and cap; overflow ellipsis via Tailwind + Click UI cell truncator. */
+const resultColumnHeaderClass =
+  "max-w-xs min-w-[11ch] truncate whitespace-nowrap";
+const resultColumnCellClass = "max-w-xs min-w-[11ch] truncate align-top";
 
 export function Editor() {
   const [sql, setSql] = useState("SELECT * from system.tables;");
@@ -93,100 +93,124 @@ export function Editor() {
   }, [sql]);
 
   const columns = useMemo(() => {
+    const first = rows?.[0];
+    if (!first) {
+      return [];
+    }
+    return Object.keys(first).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const tableHeaders = useMemo<TableColumnConfigProps[]>(
+    () =>
+      columns.map((col) => ({
+        label: col,
+        className: resultColumnHeaderClass,
+      })),
+    [columns]
+  );
+
+  const tableRows = useMemo<TableRowType[]>(() => {
     if (!rows?.length) {
       return [];
     }
-    return Object.keys(rows[0]).sort((a, b) => a.localeCompare(b));
-  }, [rows]);
+    return rows.map((row, rowIndex) => ({
+      id: rowIndex,
+      items: columns.map((col) => ({
+        label: formatCell(row[col]),
+        overflowMode: "truncated" as const,
+        className: resultColumnCellClass,
+      })),
+    }));
+  }, [rows, columns]);
+
+  const rowCount = rows?.length ?? 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 p-4">
-      <Card className="flex min-h-0 shrink-0 flex-col">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-base">SQL</CardTitle>
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-3 p-3 md:gap-4 md:p-5">
+      <Panel
+        alignItems="start"
+        className="flex min-h-0 min-w-0 shrink-0 flex-col gap-3"
+        fillWidth
+        hasBorder
+        orientation="vertical"
+        padding="md"
+        radii="md"
+      >
+        <div className="flex flex-row flex-wrap items-center justify-between gap-2">
+          <div className="space-y-1">
+            <Title size="sm" type="h2">
+              Query
+            </Title>
+            <Text color="muted" size="sm">
+              Run SQL against your ClickHouse endpoint.
+            </Text>
+          </div>
           <Button
             disabled={status === "loading"}
-            onClick={async () => {
-              await runQuery();
-            }}
-            type="button"
-          >
-            {status === "loading" ? (
-              <span className="inline-flex items-center gap-2">
-                <Spinner className="size-4" />
-                Running…
-              </span>
-            ) : (
-              "Run"
-            )}
-          </Button>
-        </CardHeader>
-        <CardContent className="min-h-0 pt-0">
-          <SqlMonacoEditor
-            height="280px"
-            onChange={(v) => setSql(v ?? "")}
-            value={sql}
+            label={status === "loading" ? "Running…" : "Run"}
+            loading={status === "loading"}
+            onClick={runQuery}
           />
-        </CardContent>
-      </Card>
+        </div>
+        <SqlMonacoEditor
+          height="280px"
+          onChange={(v) => setSql(v ?? "")}
+          value={sql}
+        />
+      </Panel>
 
       {status === "error" && errorMessage ? (
-        <Alert variant="destructive">
-          <AlertTitle>Query failed</AlertTitle>
-          <AlertDescription>{errorMessage}</AlertDescription>
-        </Alert>
+        <DangerAlert text={errorMessage} title="Query failed" />
       ) : null}
 
-      <Card className="flex min-h-0 flex-1 flex-col">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Results</CardTitle>
-        </CardHeader>
-        <CardContent className="min-h-0 flex-1 pt-0">
-          {status === "loading" ? (
-            <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm">
-              <Spinner className="size-4" />
-              Executing query…
-            </div>
-          ) : null}
+      <Panel
+        alignItems="start"
+        className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-3 overflow-hidden"
+        fillHeight
+        fillWidth
+        hasBorder
+        orientation="vertical"
+        padding="md"
+        radii="md"
+      >
+        <div className="flex flex-row flex-wrap items-center justify-between gap-2">
+          <div className="space-y-1">
+            <Title size="sm" type="h2">
+              Results
+            </Title>
+            <Text color="muted" size="sm">
+              {rowCount > 0
+                ? `${rowCount.toLocaleString()} row${rowCount === 1 ? "" : "s"} returned`
+                : "Run a query to inspect data."}
+            </Text>
+          </div>
+        </div>
 
-          {status === "success" && rows?.length === 0 ? (
-            <p className="py-6 text-muted-foreground text-sm">
-              Query returned no rows.
-            </p>
-          ) : null}
+        {status === "loading" ? (
+          <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm">
+            <Icon name="loading-animated" size="sm" />
+            Executing query…
+          </div>
+        ) : null}
 
-          {status === "success" && rows && rows.length > 0 ? (
-            <ScrollArea className="h-[min(24rem,calc(100vh-28rem))] rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {columns.map((col: string) => (
-                      <TableHead key={col}>{col}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((row) => (
-                    <TableRow key={JSON.stringify(row)}>
-                      {columns.map((col: string) => (
-                        <TableCell className="max-w-xs truncate" key={col}>
-                          {formatCell(row[col])}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          ) : null}
+        {status === "success" && rows?.length === 0 ? (
+          <p className="py-6 text-muted-foreground text-sm">
+            Query returned no rows.
+          </p>
+        ) : null}
 
-          {status === "idle" ? (
-            <p className="py-6 text-muted-foreground text-sm">
-              Run a query to see results here.
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
+        {status === "success" && rows && rows.length > 0 ? (
+          <div className="[&_table]:table-auto! min-h-0 w-full min-w-0 flex-1 overflow-x-auto overflow-y-auto overscroll-x-contain rounded-md border border-border/70 bg-background/40 [&_table]:w-max! [&_table]:min-w-full!">
+            <Table headers={tableHeaders} rows={tableRows} size="sm" />
+          </div>
+        ) : null}
+
+        {status === "idle" ? (
+          <p className="py-6 text-muted-foreground text-sm">
+            Run a query to see results here.
+          </p>
+        ) : null}
+      </Panel>
     </div>
   );
 }
