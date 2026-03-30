@@ -1,15 +1,26 @@
-import { ClickUIProvider, Text, Title } from "@clickhouse/click-ui";
-import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
+
+const routeFallback = <div className="h-full" />;
+
+const Editor = lazy(async () => {
+  const { Editor } = await import("@/components/editor");
+
+  return {
+    default: Editor,
+  };
+});
 
 export const Route = createFileRoute("/")({
-	component: HomeComponent,
+  component: HomeComponent,
 });
 
 function HomeComponent() {
-	return (
-		<ClickUIProvider theme="dark">
-			<Title type="h1">Hello ClickHouse</Title>
-			<Text>Start building today!</Text>
-		</ClickUIProvider>
-	);
+  return (
+    <ClientOnly fallback={routeFallback}>
+      <Suspense fallback={routeFallback}>
+        <Editor />
+      </Suspense>
+    </ClientOnly>
+  );
 }

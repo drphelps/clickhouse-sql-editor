@@ -11,6 +11,8 @@
     "@clickhouse-sql-editor/env": "workspace:*",
     "@clickhouse-sql-editor/ui": "workspace:*",
     "@clickhouse/click-ui": "^0.0.252-test.7",
+    "@sqlrooms/sql-editor": "^0.28.0",
+    "@sqlrooms/ui": "^0.28.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-router": "^1.141.1",

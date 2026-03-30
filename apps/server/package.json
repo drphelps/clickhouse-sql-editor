@@ -12,7 +12,6 @@
   "dependencies": {
     "@clickhouse-sql-editor/env": "workspace:*",
     "@clickhouse/client": "^1.18.2",
-    "body-parser": "^2.2.2",
     "cors": "^2.8.5",
     "dotenv": "catalog:",
     "express": "^5.1.0",
@@ -20,7 +19,6 @@
   },
   "devDependencies": {
     "@clickhouse-sql-editor/config": "workspace:*",
-    "@types/bun": "catalog:",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "tsdown": "^0.16.5",
