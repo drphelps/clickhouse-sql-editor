@@ -1,7 +1,10 @@
+import { randomUUID } from "node:crypto";
 import { createClient } from "@clickhouse/client";
 import { env } from "@clickhouse-sql-editor/env/server";
 import cors from "cors";
 import express, { type Request, type Response } from "express";
+
+import { executeSqlScript } from "./execute-sql-script.js";
 
 const app = express();
 const port = 8080; // default port to listen
@@ -37,11 +40,6 @@ app.post("/query", async (req: Request, res: Response) => {
       {} as Record<string, string>
     );
 
-    const client = createClient({
-      url: "http://localhost:8123",
-      http_headers: clickhouseHeaders,
-    });
-
     if (!req.body.query) {
       res.status(400).send({
         error: "'query' is required",
@@ -49,14 +47,42 @@ app.post("/query", async (req: Request, res: Response) => {
       return;
     }
 
-    const resultSet = await client.query({
-      query: req.body.query,
-      format: "JSONEachRow",
+    const client = createClient({
+      url: "http://localhost:8123",
+      http_headers: clickhouseHeaders,
+      session_id: randomUUID(),
     });
-    const rows = await resultSet.json();
-    res.status(200).send({
-      rows,
-    });
+
+    try {
+      const { statements, lastQueryRows } = await executeSqlScript(
+        client,
+        req.body.query
+      );
+
+      const failed = statements.find((s) => s.error !== undefined);
+      const allOk = failed === undefined;
+
+      const rows =
+        statements.length === 1 && statements[0]?.kind === "query" && allOk
+          ? (statements[0].rows ?? [])
+          : (lastQueryRows ?? []);
+
+      if (!allOk) {
+        res.status(500).send({
+          error: failed?.error ?? "Query failed",
+          statements,
+          rows,
+        });
+        return;
+      }
+
+      res.status(200).send({
+        rows,
+        statements,
+      });
+    } finally {
+      await client.close().catch(() => undefined);
+    }
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Internal server error";
