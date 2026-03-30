@@ -7,7 +7,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **TypeScript** - For type safety and improved developer experience
 - **TanStack Start** - SSR framework with TanStack Router
 - **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
+- **Click UI** - ClickHouse’s React component library (`@clickhouse/click-ui`) for editor chrome and data UI
 - **Express** - Fast, unopinionated web framework
 - **Bun** - Runtime environment
 - **Biome** - Linting and formatting
@@ -30,31 +30,25 @@ bun run dev
 Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
 The API is running at [http://localhost:3000](http://localhost:3000).
 
-## UI Customization
+## Click UI
 
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
+The web app uses [Click UI](https://click-ui.vercel.app) (`@clickhouse/click-ui`)—ClickHouse’s design system and React components (Storybook at that URL).
 
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
+### Setup
 
-### Add more shared components
+1. **Provider** — The root layout wraps the app in `ClickUIProvider` so themed components render correctly. See `apps/web/src/routes/__root.tsx`: theme is driven by `next-themes` and passed as `theme="light" | "dark"`; `persistTheme={false}` keeps theme control in this app’s own provider.
 
-Run this from the project root to add more primitives to the shared UI package:
-
-```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
-```
-
-Import shared components like this:
+2. **Imports** — Use named exports from the package:
 
 ```tsx
-import { Button } from "@clickhouse-sql-editor/ui/components/button";
+import { Button, Panel, Icon } from "@clickhouse/click-ui";
 ```
 
-### Add app-specific blocks
+3. **Version** — The dependency is declared in `apps/web/package.json`. Bump `@clickhouse/click-ui` there when you want a newer release.
 
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
+### Layout and Tailwind
+
+Page chrome (header, grid, theme toggle) still uses Tailwind. Global tokens and base styles come from `packages/ui` via `apps/web/src/index.css` (`@import "@clickhouse-sql-editor/ui/globals.css"`). Adjust shared CSS variables there if you need to tune non–Click UI surfaces.
 
 ## Git Hooks and Formatting
 
@@ -68,7 +62,7 @@ clickhouse-sql-editor/
 │   ├── web/         # Frontend application (React + TanStack Start)
 │   └── server/      # Backend API (Express)
 ├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
+│   ├── ui/          # Shared global styles (Tailwind) and small auxiliary components
 ```
 
 ## Available Scripts

@@ -6,6 +6,9 @@ export function createAppQueryClient(): QueryClient {
       queries: {
         retry: false,
       },
+      mutations: {
+        retry: false,
+      },
     },
   });
 }

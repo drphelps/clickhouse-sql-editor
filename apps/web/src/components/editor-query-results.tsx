@@ -41,15 +41,12 @@ export function ResultsPanelHeader({ subtitle }: ResultsPanelHeaderProps) {
 }
 
 interface EditorQueryResultsProps {
+  rowsAlreadyFetched?: Record<string, unknown>[];
   runId: number;
   sql: string;
 }
 
-export function EditorQueryResults({ runId, sql }: EditorQueryResultsProps) {
-  const { data: rows } = useSuspenseQuery(
-    clickhouseSqlRunQueryOptions(runId, sql)
-  );
-
+function QueryResultsContent({ rows }: { rows: Record<string, unknown>[] }) {
   const columns = useMemo(() => {
     const first = rows[0];
     if (!first) {
@@ -103,4 +100,28 @@ export function EditorQueryResults({ runId, sql }: EditorQueryResultsProps) {
       )}
     </>
   );
+}
+
+function EditorQueryResultsRemote({
+  runId,
+  sql,
+}: {
+  runId: number;
+  sql: string;
+}) {
+  const { data: rows } = useSuspenseQuery(
+    clickhouseSqlRunQueryOptions(runId, sql)
+  );
+  return <QueryResultsContent rows={rows} />;
+}
+
+export function EditorQueryResults({
+  runId,
+  sql,
+  rowsAlreadyFetched,
+}: EditorQueryResultsProps) {
+  if (rowsAlreadyFetched !== undefined) {
+    return <QueryResultsContent rows={rowsAlreadyFetched} />;
+  }
+  return <EditorQueryResultsRemote runId={runId} sql={sql} />;
 }

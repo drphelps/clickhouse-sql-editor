@@ -22,5 +22,17 @@ POST http://localhost:8080/query
 Content-Type: application/json
 
 {
-    "query": "CREATE TABLE IF NOT EXISTS test_table (id UInt32) ENGINE = Memory;\nINSERT INTO test_table VALUES (1), (2);\nSELECT * FROM test_table"
+  "query": "CREATE TABLE IF NOT EXISTS test_table (id UInt32) ENGINE = Memory;\nINSERT INTO test_table VALUES (1), (2);\nSELECT * FROM test_table"
 }
+
+### Upload SQL file (multipart field name: file, max 2 MB, .sql / .txt only)
+
+POST http://localhost:8080/query/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="script.sql"
+Content-Type: application/sql
+
+SELECT 1 AS uploaded
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

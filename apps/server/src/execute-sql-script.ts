@@ -29,7 +29,6 @@ export interface ScriptStatementResult {
 }
 
 export interface ExecuteScriptResult {
-  /** Last successful query rows; useful when the script ends with SELECT */
   lastQueryRows: Record<string, unknown>[] | null;
   statements: ScriptStatementResult[];
 }
@@ -124,10 +123,6 @@ async function runStatement(
   }
 }
 
-/**
- * Runs split SQL statements sequentially against ClickHouse (HTTP client).
- * Uses one session per run so session-scoped statements (SET, TEMPORARY tables) apply.
- */
 export async function executeSqlScript(
   client: ClickHouseClient,
   script: string

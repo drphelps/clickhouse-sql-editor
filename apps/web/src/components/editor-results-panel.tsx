@@ -7,10 +7,18 @@ import {
   ResultsPanelHeader,
 } from "@/components/editor-query-results";
 
-export interface ActiveQueryRun {
-  runId: number;
-  sql: string;
-}
+export type ActiveQueryRun =
+  | {
+      runId: number;
+      source: "editor";
+      sql: string;
+    }
+  | {
+      runId: number;
+      source: "upload";
+      rows: Record<string, unknown>[];
+      sql: string;
+    };
 
 function QueryErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   const text = error instanceof Error ? error.message : "Request failed.";
@@ -64,6 +72,9 @@ export function EditorResultsPanel({ activeRun }: EditorResultsPanelProps) {
             >
               <Suspense fallback={<QueryResultsSuspenseFallback />}>
                 <EditorQueryResults
+                  rowsAlreadyFetched={
+                    activeRun.source === "upload" ? activeRun.rows : undefined
+                  }
                   runId={activeRun.runId}
                   sql={activeRun.sql}
                 />

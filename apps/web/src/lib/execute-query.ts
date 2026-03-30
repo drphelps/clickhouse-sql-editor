@@ -4,6 +4,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function parseClickhouseQueryPayload(
+  response: Response,
+  payload: unknown
+): Record<string, unknown>[] {
+  if (!response.ok) {
+    const message =
+      isRecord(payload) && typeof payload.error === "string"
+        ? payload.error
+        : response.statusText;
+    throw new Error(message);
+  }
+
+  if (!(isRecord(payload) && Array.isArray(payload.rows))) {
+    throw new Error("Unexpected response from server.");
+  }
+
+  return payload.rows.filter(isRecord);
+}
+
 export async function executeClickhouseQuery(
   sql: string
 ): Promise<Record<string, unknown>[]> {
@@ -15,20 +34,29 @@ export async function executeClickhouseQuery(
     });
 
     const payload: unknown = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      const message =
-        isRecord(payload) && typeof payload.error === "string"
-          ? payload.error
-          : response.statusText;
-      throw new Error(message);
+    return parseClickhouseQueryPayload(response, payload);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
     }
+    throw new Error("Request failed.");
+  }
+}
 
-    if (!(isRecord(payload) && Array.isArray(payload.rows))) {
-      throw new Error("Unexpected response from server.");
-    }
+export async function executeClickhouseQueryFromUpload(
+  file: File
+): Promise<Record<string, unknown>[]> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
-    return payload.rows.filter(isRecord);
+    const response = await fetch(`${env.VITE_SERVER_URL}/query/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const payload: unknown = await response.json().catch(() => null);
+    return parseClickhouseQueryPayload(response, payload);
   } catch (error) {
     if (error instanceof Error) {
       throw error;
