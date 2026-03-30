@@ -10,6 +10,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useTheme } from "next-themes";
 import Header from "../components/header";
+import { AppQueryClientProvider } from "../components/query-client-provider";
 import { ThemeProvider } from "../components/theme-provider";
 
 export type RouterAppContext = Record<string, never>;
@@ -61,12 +62,14 @@ function ThemedApp() {
 
   return (
     <ClickUIProvider persistTheme={false} theme={clickTheme}>
-      <div className="grid h-svh grid-rows-[auto_1fr]">
-        <Header />
-        <div className="min-h-0 min-w-0 overflow-x-hidden">
-          <Outlet />
+      <AppQueryClientProvider>
+        <div className="grid h-svh grid-rows-[auto_1fr]">
+          <Header />
+          <div className="min-h-0 min-w-0 overflow-x-hidden">
+            <Outlet />
+          </div>
         </div>
-      </div>
+      </AppQueryClientProvider>
     </ClickUIProvider>
   );
 }

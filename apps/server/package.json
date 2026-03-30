@@ -16,12 +16,14 @@
     "cors": "^2.8.5",
     "dotenv": "catalog:",
     "express": "^5.1.0",
+    "multer": "^2.1.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@clickhouse-sql-editor/config": "workspace:*",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
+    "@types/multer": "^2.1.0",
     "tsdown": "^0.16.5",
     "typescript": "^5"
   }

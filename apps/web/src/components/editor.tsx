@@ -1,129 +1,40 @@
-import type {
-  TableColumnConfigProps,
-  TableRowType,
-} from "@clickhouse/click-ui";
 import {
   Button,
   DangerAlert,
-  Icon,
+  FileUpload,
+  Flyout,
   Panel,
-  Table,
   Text,
   Title,
 } from "@clickhouse/click-ui";
-import { env } from "@clickhouse-sql-editor/env/web";
 import { SqlMonacoEditor } from "@sqlrooms/sql-editor";
-import { useCallback, useMemo, useState } from "react";
-
-type QueryStatus = "idle" | "loading" | "success" | "error";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function formatCell(value: unknown): string {
-  if (value === null || value === undefined) {
-    return "";
-  }
-  if (typeof value === "object") {
-    return JSON.stringify(value);
-  }
-  return String(value);
-}
-
-/** Readable column floor and cap; overflow ellipsis via Tailwind + Click UI cell truncator. */
-const resultColumnHeaderClass =
-  "max-w-xs min-w-[11ch] truncate whitespace-nowrap";
-const resultColumnCellClass = "max-w-xs min-w-[11ch] truncate align-top";
+import { useCallback, useState, useTransition } from "react";
+import {
+  type ActiveQueryRun,
+  EditorResultsPanel,
+} from "@/components/editor-results-panel";
 
 export function Editor() {
   const [sql, setSql] = useState("SELECT * from system.tables;");
-  const [rows, setRows] = useState<Record<string, unknown>[] | null>(null);
-  const [status, setStatus] = useState<QueryStatus>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activeRun, setActiveRun] = useState<ActiveQueryRun | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isRunPending, startRunTransition] = useTransition();
 
-  const runQuery = useCallback(async () => {
-    setStatus("loading");
-    setErrorMessage(null);
-
+  const runQuery = useCallback(() => {
     const trimmed = sql.trim();
     if (!trimmed) {
-      setStatus("error");
-      setErrorMessage("Enter a SQL query to run.");
+      setValidationError("Enter a SQL query to run.");
       return;
     }
 
-    try {
-      const response = await fetch(`${env.VITE_SERVER_URL}/query`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed }),
-      });
-
-      const payload: unknown = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        const message =
-          isRecord(payload) && typeof payload.error === "string"
-            ? payload.error
-            : response.statusText;
-        setRows(null);
-        setStatus("error");
-        setErrorMessage(message);
-        return;
-      }
-
-      if (!(isRecord(payload) && Array.isArray(payload.rows))) {
-        setRows(null);
-        setStatus("error");
-        setErrorMessage("Unexpected response from server.");
-        return;
-      }
-
-      const nextRows = payload.rows.filter(isRecord);
-      setRows(nextRows);
-      setStatus("success");
-    } catch (error) {
-      setRows(null);
-      setStatus("error");
-      setErrorMessage(
-        error instanceof Error ? error.message : "Request failed."
-      );
-    }
+    setValidationError(null);
+    startRunTransition(() => {
+      setActiveRun((prev) => ({
+        runId: (prev?.runId ?? 0) + 1,
+        sql: trimmed,
+      }));
+    });
   }, [sql]);
-
-  const columns = useMemo(() => {
-    const first = rows?.[0];
-    if (!first) {
-      return [];
-    }
-    return Object.keys(first).sort((a, b) => a.localeCompare(b));
-  }, [rows]);
-
-  const tableHeaders = useMemo<TableColumnConfigProps[]>(
-    () =>
-      columns.map((col) => ({
-        label: col,
-        className: resultColumnHeaderClass,
-      })),
-    [columns]
-  );
-
-  const tableRows = useMemo<TableRowType[]>(() => {
-    if (!rows?.length) {
-      return [];
-    }
-    return rows.map((row, rowIndex) => ({
-      id: rowIndex,
-      items: columns.map((col) => ({
-        label: formatCell(row[col]),
-        overflowMode: "truncated" as const,
-        className: resultColumnCellClass,
-      })),
-    }));
-  }, [rows, columns]);
-
-  const rowCount = rows?.length ?? 0;
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-3 p-3 md:gap-4 md:p-5">
@@ -136,7 +47,7 @@ export function Editor() {
         padding="md"
         radii="md"
       >
-        <div className="flex flex-row flex-wrap items-center justify-between gap-2">
+        <div className="flex w-full flex-row flex-wrap items-center justify-between gap-2">
           <div className="space-y-1">
             <Title size="sm" type="h2">
               Query
@@ -145,12 +56,39 @@ export function Editor() {
               Run SQL against your ClickHouse endpoint.
             </Text>
           </div>
-          <Button
-            disabled={status === "loading"}
-            label={status === "loading" ? "Running…" : "Run"}
-            loading={status === "loading"}
-            onClick={runQuery}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Flyout>
+              <Flyout.Trigger>
+                <Button label="Upload file" type="secondary" />
+              </Flyout.Trigger>
+              <Flyout.Content
+                align="end"
+                showOverlay
+                size="default"
+                strategy="fixed"
+              >
+                <Flyout.Header
+                  description="Drag and drop a file or browse. Accepted: .sql, .txt."
+                  title="Upload file"
+                />
+                <Flyout.Body>
+                  <FileUpload
+                    supportedFileTypes={[".sql", ".txt"]}
+                    title="Drop your file here or click to browse"
+                  />
+                </Flyout.Body>
+                <Flyout.Footer>
+                  <Flyout.Close label="Close" />
+                </Flyout.Footer>
+              </Flyout.Content>
+            </Flyout>
+            <Button
+              disabled={isRunPending}
+              label={isRunPending ? "Running…" : "Run"}
+              loading={isRunPending}
+              onClick={runQuery}
+            />
+          </div>
         </div>
         <SqlMonacoEditor
           height="280px"
@@ -159,58 +97,11 @@ export function Editor() {
         />
       </Panel>
 
-      {status === "error" && errorMessage ? (
-        <DangerAlert text={errorMessage} title="Query failed" />
-      ) : null}
+      {validationError === null ? null : (
+        <DangerAlert text={validationError} title="Query failed" />
+      )}
 
-      <Panel
-        alignItems="start"
-        className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-3 overflow-hidden"
-        fillHeight
-        fillWidth
-        hasBorder
-        orientation="vertical"
-        padding="md"
-        radii="md"
-      >
-        <div className="flex flex-row flex-wrap items-center justify-between gap-2">
-          <div className="space-y-1">
-            <Title size="sm" type="h2">
-              Results
-            </Title>
-            <Text color="muted" size="sm">
-              {rowCount > 0
-                ? `${rowCount.toLocaleString()} row${rowCount === 1 ? "" : "s"} returned`
-                : "Run a query to inspect data."}
-            </Text>
-          </div>
-        </div>
-
-        {status === "loading" ? (
-          <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm">
-            <Icon name="loading-animated" size="sm" />
-            Executing query…
-          </div>
-        ) : null}
-
-        {status === "success" && rows?.length === 0 ? (
-          <p className="py-6 text-muted-foreground text-sm">
-            Query returned no rows.
-          </p>
-        ) : null}
-
-        {status === "success" && rows && rows.length > 0 ? (
-          <div className="[&_table]:table-auto! min-h-0 w-full min-w-0 flex-1 overflow-x-auto overflow-y-auto overscroll-x-contain rounded-md border border-border/70 bg-background/40 [&_table]:w-max! [&_table]:min-w-full!">
-            <Table headers={tableHeaders} rows={tableRows} size="sm" />
-          </div>
-        ) : null}
-
-        {status === "idle" ? (
-          <p className="py-6 text-muted-foreground text-sm">
-            Run a query to see results here.
-          </p>
-        ) : null}
-      </Panel>
+      <EditorResultsPanel activeRun={activeRun} />
     </div>
   );
 }
