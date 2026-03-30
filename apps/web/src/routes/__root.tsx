@@ -8,9 +8,9 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { useTheme } from "next-themes";
 import Header from "../components/header";
-import { ThemeProvider, useTheme } from "../components/theme-provider";
-import appCss from "../index.css?url";
+import { ThemeProvider } from "../components/theme-provider";
 
 export type RouterAppContext = Record<string, never>;
 
@@ -28,47 +28,25 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         title: "My App",
       },
     ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
   }),
 
   component: RootDocument,
 });
 
 const routeFallback = <div className="h-full min-h-0 min-w-0" />;
-const themeInitScript = `
-(() => {
-  const storageKey = "theme-preference";
-  const stored = window.localStorage.getItem(storageKey);
-  const preference =
-    stored === "light" || stored === "dark" || stored === "system"
-      ? stored
-      : "system";
-  const isDark =
-    preference === "dark" ||
-    (preference === "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", isDark);
-})();
-`;
 
 function RootDocument() {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <script>{themeInitScript}</script>
         <HeadContent />
       </head>
       <body>
-        <ClientOnly fallback={routeFallback}>
-          <ThemeProvider>
+        <ThemeProvider>
+          <ClientOnly fallback={routeFallback}>
             <ThemedApp />
-          </ThemeProvider>
-        </ClientOnly>
+          </ClientOnly>
+        </ThemeProvider>
         <Toaster richColors />
         <TanStackRouterDevtools position="bottom-left" />
         <Scripts />
@@ -79,9 +57,10 @@ function RootDocument() {
 
 function ThemedApp() {
   const { resolvedTheme } = useTheme();
+  const clickTheme = resolvedTheme === "dark" ? "dark" : "light";
 
   return (
-    <ClickUIProvider persistTheme={false} theme={resolvedTheme}>
+    <ClickUIProvider persistTheme={false} theme={clickTheme}>
       <div className="grid h-svh grid-rows-[auto_1fr]">
         <Header />
         <div className="min-h-0 min-w-0 overflow-x-hidden">
