@@ -9,6 +9,7 @@ import {
 } from "@clickhouse/click-ui";
 import { SqlMonacoEditor } from "@sqlrooms/sql-editor";
 import { useMutation } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import { useCallback, useState, useTransition } from "react";
 import {
   type ActiveQueryRun,
@@ -18,6 +19,7 @@ import { clickhouseSqlUploadMutation } from "@/lib/mutations/clickhouse-sql-uplo
 import { normalizeSqlScriptText } from "@/lib/normalize-sql-script";
 
 export function Editor() {
+  const { resolvedTheme } = useTheme();
   const [sql, setSql] = useState("");
   const [activeRun, setActiveRun] = useState<ActiveQueryRun | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -93,6 +95,7 @@ export function Editor() {
   } else if (uploadMutation.isPending) {
     runButtonLabel = "Uploading…";
   }
+  const editorTheme = resolvedTheme === "dark" ? "vs-dark" : "light";
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-3 p-3 md:gap-4 md:p-5">
@@ -160,6 +163,7 @@ export function Editor() {
         <SqlMonacoEditor
           height="280px"
           onChange={(v) => setSql(v ?? "")}
+          theme={editorTheme}
           value={sql}
         />
       </Panel>
