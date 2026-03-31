@@ -1,75 +1,84 @@
 # clickhouse-sql-editor
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Express, and more.
+A small monorepo for a local ClickHouse SQL editor:
 
-## Features
+- `apps/web`: React + TanStack Start frontend
+- `apps/server`: Express API that proxies queries to ClickHouse
 
-- **TypeScript** - For type safety and improved developer experience
-- **TanStack Start** - SSR framework with TanStack Router
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Click UI** - ClickHouse’s React component library (`@clickhouse/click-ui`) for editor chrome and data UI
-- **Express** - Fast, unopinionated web framework
-- **Bun** - Runtime environment
-- **Biome** - Linting and formatting
-- **Turborepo** - Optimized monorepo build system
+## Stack
 
-## Getting Started
+- TypeScript
+- Bun
+- React + TanStack Start
+- Express
+- ClickHouse
+- Tailwind CSS
+- Turborepo
 
-First, install the dependencies:
+## Run Locally
+
+Prerequisites:
+
+- `bun`
+- Docker Desktop or Docker Engine with Compose
+
+Install dependencies:
 
 ```bash
 bun install
 ```
 
-Then, run the development server:
+Optional: copy the example env files if you want to override the default local values:
+
+```bash
+cp apps/server/.env.example apps/server/.env
+cp apps/web/.env.example apps/web/.env
+```
+
+Start ClickHouse in Docker:
+
+```bash
+docker compose up -d clickhouse
+```
+
+Start the app:
 
 ```bash
 bun run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
+Local URLs:
 
-## Click UI
+- Web app: [http://localhost:3001](http://localhost:3001)
+- API: [http://localhost:8080](http://localhost:8080)
+- ClickHouse HTTP: [http://localhost:8123](http://localhost:8123)
 
-The web app uses [Click UI](https://click-ui.vercel.app) (`@clickhouse/click-ui`)—ClickHouse’s design system and React components (Storybook at that URL).
+Stop ClickHouse when finished:
 
-### Setup
-
-1. **Provider** — The root layout wraps the app in `ClickUIProvider` so themed components render correctly. See `apps/web/src/routes/__root.tsx`: theme is driven by `next-themes` and passed as `theme="light" | "dark"`; `persistTheme={false}` keeps theme control in this app’s own provider.
-
-2. **Imports** — Use named exports from the package:
-
-```tsx
-import { Button, Panel, Icon } from "@clickhouse/click-ui";
+```bash
+docker compose down
 ```
-
-3. **Version** — The dependency is declared in `apps/web/package.json`. Bump `@clickhouse/click-ui` there when you want a newer release.
-
-### Layout and Tailwind
-
-Page chrome (header, grid, theme toggle) still uses Tailwind. Global tokens and base styles come from `packages/ui` via `apps/web/src/index.css` (`@import "@clickhouse-sql-editor/ui/globals.css"`). Adjust shared CSS variables there if you need to tune non–Click UI surfaces.
-
-## Git Hooks and Formatting
-
-- Format and lint fix: `bun run check`
 
 ## Project Structure
 
-```
+```text
 clickhouse-sql-editor/
 ├── apps/
-│   ├── web/         # Frontend application (React + TanStack Start)
-│   └── server/      # Backend API (Express)
+│   ├── web/       # frontend
+│   └── server/    # API
 ├── packages/
-│   ├── ui/          # Shared global styles (Tailwind) and small auxiliary components
+│   ├── env/       # shared env parsing
+│   ├── ui/        # shared UI/styles
+│   └── config/    # shared tooling config
+└── docker/        # ClickHouse config
 ```
 
-## Available Scripts
+## Useful Commands
 
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:web`: Start only the web application
-- `bun run dev:server`: Start only the server
-- `bun run check-types`: Check TypeScript types across all apps
-- `bun run check`: Run Biome formatting and linting
+- `bun run dev`: start web and server
+- `bun run dev:web`: start only the web app
+- `bun run dev:server`: start only the server
+- `bun run build`: build all apps
+- `bun run check-types`: run TypeScript checks
+- `bun run check`: run lint/format checks
+- `bun run fix`: auto-fix lint/format issues
