@@ -6,7 +6,7 @@
       "dependsOn": ["^build"],
       "env": ["CLICKHOUSE_URL", "CORS_ORIGIN"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", ".output/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]

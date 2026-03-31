@@ -12,7 +12,7 @@
     "@clickhouse-sql-editor/ui": "workspace:*",
     "@clickhouse/click-ui": "^0.0.252-test.7",
     "@sqlrooms/sql-editor": "0.29.0-rc.1",
-    "@tailwindcss/vite": "^4.1.18",
+    "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-router": "^1.141.1",
     "@tanstack/react-router-with-query": "^1.130.17",
@@ -39,6 +39,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^5.0.4",
     "jsdom": "^26.0.0",
+    "nitro": "^3.0.260311-beta",
     "typescript": "^5",
     "vite": "^7.0.2",
     "web-vitals": "^5.0.3"
