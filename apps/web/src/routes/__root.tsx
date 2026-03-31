@@ -13,7 +13,7 @@ import Header from "../components/header";
 import { AppQueryClientProvider } from "../components/query-client-provider";
 import { ThemeProvider } from "../components/theme-provider";
 
-export type RouterAppContext = Record<string, never>;
+type RouterAppContext = Record<string, never>;
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({

@@ -14,7 +14,6 @@
   "aliases": {
     "components": "@clickhouse-sql-editor/ui/components",
     "utils": "@clickhouse-sql-editor/ui/lib/utils",
-    "hooks": "@clickhouse-sql-editor/ui/hooks",
     "lib": "@clickhouse-sql-editor/ui/lib",
     "ui": "@clickhouse-sql-editor/ui/components"
   },

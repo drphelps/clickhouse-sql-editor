@@ -2,7 +2,7 @@ import { mutationOptions } from "@tanstack/react-query";
 import { executeClickhouseQueryFromUpload } from "@/lib/execute-query";
 import { mutationKeys } from "@/lib/mutation-keys";
 
-export interface ClickhouseSqlUploadVariables {
+interface ClickhouseSqlUploadVariables {
   file: File;
   normalizedScript: string;
 }
