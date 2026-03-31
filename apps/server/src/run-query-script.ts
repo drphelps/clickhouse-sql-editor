@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@clickhouse/client";
+import { env } from "@clickhouse-sql-editor/env/server";
 import type { Request, Response } from "express";
-
 import { executeSqlScript } from "./execute-sql-script.js";
 
 const UTF8_BOM_PREFIX = /^\uFEFF/;
@@ -46,7 +46,7 @@ export async function sendScriptExecutionResponse(
 
   const clickhouseHeaders = extractClickHouseHeaders(req);
   const client = createClient({
-    url: "http://localhost:8123",
+    url: env.CLICKHOUSE_URL,
     http_headers: clickhouseHeaders,
     session_id: randomUUID(),
   });

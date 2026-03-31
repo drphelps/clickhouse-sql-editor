@@ -68,7 +68,7 @@ export function Editor() {
               rows,
               sql: variables.normalizedScript,
             }));
-            // setUploadFlyoutOpen(false);
+            setUploadFlyoutOpen(false);
           },
           onError: (error) => {
             const message =
