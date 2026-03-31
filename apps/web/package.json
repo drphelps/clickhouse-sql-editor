@@ -5,7 +5,8 @@
   "scripts": {
     "build": "vite build",
     "serve": "vite preview",
-    "dev": "vite dev"
+    "dev": "vite dev",
+    "test": "vitest run"
   },
   "dependencies": {
     "@clickhouse-sql-editor/env": "workspace:*",
@@ -28,13 +29,17 @@
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.141.1",
     "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^5.0.4",
     "jsdom": "^26.0.0",
+    "msw": "^2.11.5",
     "nitro": "^3.0.260311-beta",
     "typescript": "^5",
+    "vitest": "^3.2.4",
     "vite": "^7.0.2"
   }
 }
